@@ -17,8 +17,8 @@ RUN pip install -U --no-cache-dir \
         youtube_transcript_api \
 #ebook library
         ebooklib \
-#kanji reading
-        pykakasi \
+#kanji reading (not supported on arm64)
+#        pykakasi \
 #bottle
         bottle \
 #spacy
