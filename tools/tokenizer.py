@@ -3,11 +3,11 @@ BaseRequest.MEMFILE_MAX = 1024 * 1024 * 100
 from spacy.language import Language
 import sys
 import json
-import pykakasi
+#import pykakasi
 import spacy
 import time
 import re
-import ebooklib 
+import ebooklib
 import html
 import pinyin
 from ebooklib import epub
@@ -56,7 +56,7 @@ slovenian_nlp = None
 
 
 @Language.component("custom_sentence_splitter")
-def custom_sentence_splitter(doc):    
+def custom_sentence_splitter(doc):
     punctuations = ['NEWLINE', '？', '！', '。', '?', '!', '.', '»', '«']
     for token in doc[:-1]:
         if token.text in punctuations:
@@ -74,7 +74,8 @@ def getTokenizerDoc(language, words):
             german_nlp = spacy.load("de_core_news_sm", disable = ['ner'])
             german_nlp.add_pipe("custom_sentence_splitter", first=True)
         doc = german_nlp(words)
-        
+
+    """
     if language == 'japanese':
         global japanese_nlp
         global hiraganaConverter
@@ -83,6 +84,7 @@ def getTokenizerDoc(language, words):
             japanese_nlp.add_pipe("custom_sentence_splitter", first=True)
             hiraganaConverter = pykakasi.kakasi()
         doc = japanese_nlp(words)
+    """
 
     if language == 'korean':
         global korean_nlp
@@ -111,28 +113,28 @@ def getTokenizerDoc(language, words):
             chinese_nlp = spacy.load("zh_core_web_sm", disable = ['ner', 'parser'])
             chinese_nlp.add_pipe("custom_sentence_splitter", first=True)
         doc = chinese_nlp(words)
-    
+
     if language == 'dutch':
         global dutch_nlp
         if dutch_nlp == None:
             dutch_nlp = spacy.load("nl_core_news_sm", disable = ['ner', 'parser'])
             dutch_nlp.add_pipe("custom_sentence_splitter", first=True)
         doc = dutch_nlp(words)
-    
+
     if language == 'finnish':
         global finnish_nlp
         if finnish_nlp == None:
             finnish_nlp = spacy.load("fi_core_news_sm", disable = ['ner', 'parser'])
             finnish_nlp.add_pipe("custom_sentence_splitter", first=True)
         doc = finnish_nlp(words)
-    
+
     if language == 'french':
         global french_nlp
         if french_nlp == None:
             french_nlp = spacy.load("fr_core_news_sm", disable = ['ner', 'parser'])
             french_nlp.add_pipe("custom_sentence_splitter", first=True)
         doc = french_nlp(words)
-    
+
     if language == 'italian':
         global italian_nlp
         if italian_nlp == None:
@@ -196,7 +198,7 @@ def getTokenizerDoc(language, words):
             catalan_nlp = spacy.load("ca_core_news_sm", disable = ['ner', 'parser'])
             catalan_nlp.add_pipe("custom_sentence_splitter", first=True)
         doc = catalan_nlp(words)
-    
+
     if language == 'croatian':
         global croatian_nlp
         if croatian_nlp is None:
@@ -245,14 +247,14 @@ def getTokenizerDoc(language, words):
             romanian_nlp = spacy.load("ro_core_news_sm", disable = ['ner', 'parser'])
             romanian_nlp.add_pipe("custom_sentence_splitter", first=True)
         doc = romanian_nlp(words)
-    
+
     if language == 'slovenian':
         global slovenian_nlp
         if slovenian_nlp is None:
             slovenian_nlp = spacy.load("sl_core_news_sm", disable = ['ner', 'parser'])
             slovenian_nlp.add_pipe("custom_sentence_splitter", first=True)
         doc = slovenian_nlp(words)
-        
+
     if language in ('welsh', 'czech', 'latin'):
         global multi_nlp
         if multi_nlp == None:
@@ -278,7 +280,7 @@ def get_separable_lemma(token):
         return prefix[0] + token.lemma_
     return token.lemma_
 
-# Cuts a text into sentences and words. Works like 
+# Cuts a text into sentences and words. Works like
 # tokenizer, but provides no additional data for words.
 def tokenizeTextSimple(words, language, sentenceIndexStart = 0):
     tokenizedWords = list()
@@ -289,7 +291,7 @@ def tokenizeTextSimple(words, language, sentenceIndexStart = 0):
         words = words.replace(sentenceEnding, sentenceEnding + 'TMP_ST')
 
     sentences = words.split('TMP_ST')
-    
+
     wordIndex = 0
     for sentenceIndex, sentence in enumerate(sentences):
         # split sentences into words
@@ -301,10 +303,10 @@ def tokenizeTextSimple(words, language, sentenceIndexStart = 0):
         for word in sentences[sentenceIndex]:
             if word == ' ' or word == '' or word == ' ':
                 continue
-            
+
             tokenizedWords.append({'w': word, 'r': '', 'l': '', 'lr': '', 'pos': '','si': sentenceIndex + sentenceIndexStart, 'g': ''})
             wordIndex = wordIndex + 1
-    
+
     return tokenizedWords
 
 # Tokenizes a text with spacy.
@@ -312,17 +314,17 @@ def tokenizeText(words, language, sentenceIndexStart = 0):
     global hiraganaConverter
     tokenizedWords = list()
     doc = getTokenizerDoc(language, words)
-    
+
 
     for sentenceIndex, sentence in enumerate(doc.sents):
         for token in sentence:
             word = str(token.text)
             if word == ' ' or word == '' or word == ' ':
                 continue
-            
+
             #get lemma
             lemma = token.lemma_
-            
+
             #get hiragana reading
             reading = list()
             lemmaReading = list()
@@ -330,11 +332,11 @@ def tokenizeText(words, language, sentenceIndexStart = 0):
                 result = hiraganaConverter.convert(token.text)
                 for x in result:
                     reading.append(x['hira'])
-                
+
                 result = hiraganaConverter.convert(token.lemma_)
                 for x in result:
                     lemmaReading.append(x['hira'])
-            
+
                 reading = ''.join(reading)
                 lemmaReading = ''.join(lemmaReading)
 
@@ -350,7 +352,7 @@ def tokenizeText(words, language, sentenceIndexStart = 0):
 
             if language == 'german' and token.pos_ == 'VERB':
                 lemma = get_separable_lemma(token)
-            
+
             tokenizedWords.append({'w': word, 'r': reading, 'l': lemma, 'lr': lemmaReading, 'pos': token.pos_,'si': sentenceIndex + sentenceIndexStart, 'g': gender})
     return tokenizedWords
 
@@ -385,7 +387,7 @@ def tokenizer():
             tokenizedText.append(tokenizeText(text, language))
         return json.dumps(tokenizedText)
 
-# returns a raw text and a tokenized text 
+# returns a raw text and a tokenized text
 # of n .epub file cut into chunks
 @route('/tokenizer/import-book', method='POST')
 def importBook():
@@ -394,7 +396,7 @@ def importBook():
     textProcessingMethod = request.json.get('textProcessingMethod')
     importFile = request.json.get('importFile')
     language = request.json.get('language')
-    
+
     # load book
     content = loadBook(importFile)
     content = content.replace('\r\n', ' NEWLINE ')
@@ -436,7 +438,7 @@ def importText():
     textProcessingMethod = request.json.get('textProcessingMethod')
     importText = request.json.get('importText')
     language = request.json.get('language')
-    
+
     # load text
     text = importText.replace('\r\n', ' NEWLINE ')
     text = text.replace('\n', ' NEWLINE ')
@@ -491,7 +493,7 @@ def importSubtitles():
             processedChunks.append(list())
             chunkTimeStamps.append(list())
 
-    
+
         text = importSubtitles[subtitleIndex]['text'].replace('\r\n', ' NEWLINE ')
         text = text.replace('\n', ' NEWLINE ')
 
@@ -516,7 +518,7 @@ def importSubtitles():
             'sentenceIndexStart': tokenizedText[0]['si'],
             'sentenceIndexEnd': tokenizedText[-1]['si']
         })
-                    
+
         ## add tokenized text to processed chunk
         processedChunks[-1] = processedChunks[-1] + tokenizedText
 
@@ -529,25 +531,25 @@ def importSubtitles():
 def getYoutubeSubtitles():
     response.headers['Content-Type'] = 'application/json'
     url = request.json.get('url')
-    
+
     parsedUrl = parse.urlparse(url)
     videoId = parse.parse_qs(parsedUrl.query)['v'][0]
 
     try:
         subtitles = YouTubeTranscriptApi.list_transcripts(videoId)
-    except TranscriptsDisabled: 
+    except TranscriptsDisabled:
         return json.dumps(list())
 
     subtitleList = list()
     for subtitle in subtitles:
         subtitleList.append({
-            'language': subtitle.language, 
-            'languageLowerCase': subtitle.language.lower(), 
-            'languageCode': subtitle.language_code, 
+            'language': subtitle.language,
+            'languageLowerCase': subtitle.language.lower(),
+            'languageCode': subtitle.language_code,
             'text': '\n'.join(line['text'] for line in subtitle.fetch())
         })
 
-    
+
     return json.dumps(subtitleList)
 
 @route('/tokenizer/get-subtitle-file-content', method='POST')
@@ -555,7 +557,7 @@ def getYoutubeSubtitles():
     response.headers['Content-Type'] = 'application/json'
     fileName = request.json.get('fileName')
     subtitleContent = list()
-    
+
     subtitles = parser.parse(fileName)
     subtitles = formatting.clean(subtitles)
     for subtitle in subtitles:
@@ -568,7 +570,7 @@ def getYoutubeSubtitles():
         })
 
     # try:
-    # except TranscriptsDisabled: 
+    # except TranscriptsDisabled:
     #     return json.dumps(list())
 
 
